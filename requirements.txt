@@ -1,0 +1,23 @@
+# --- Core dependencies ---
+grpcio==1.68.0              # gRPC library for communication
+grpcio-tools==1.68.0        # For compiling .proto files
+protobuf==5.28.3            # Protocol Buffers for message serialization
+
+# --- Consensus / Distributed systems ---
+raftos==0.6.0               # Simple Raft consensus implementation (Python)
+pytz==2024.2                # Timezone handling for time sync
+ntplib==0.4.0               # For NTP-based time synchronization
+
+# --- Database ---
+SQLAlchemy==2.0.35          # ORM for database access
+psycopg2-binary==2.9.9      # PostgreSQL driver (if using Postgres)
+sqlite-utils==3.37          # Utility for SQLite (alternative lightweight DB)
+
+# --- Utilities ---
+pydantic==2.9.2             # Data validation & configuration
+python-dotenv==1.0.1        # Load environment variables
+loguru==0.7.2               # Better logging
+
+# --- Testing ---
+pytest==8.3.3               # Unit testing
+pytest-asyncio==0.25.0      # Async testing support
