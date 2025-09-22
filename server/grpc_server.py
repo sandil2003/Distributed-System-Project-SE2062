@@ -15,7 +15,7 @@ from proto import replication_pb2_grpc
 from server.consensus.raft import RaftNode
 from server.replication.sync_manager import ReplicationService
 from server.node.node_server import PaymentService
-
+from server.node.heartbeat import HeartbeatMonitor
 
 def serve():
     """
@@ -30,6 +30,8 @@ def serve():
     # Initialize Raft node and Replication service
     raft_node = RaftNode()
     replicator = ReplicationService()
+    heartbeat_monitor = HeartbeatMonitor()
+    heartbeat_monitor.start()
 
     # Initialize PaymentService with references to Raft node and Replicator
     payment_service = PaymentService(raft_node=raft_node, replicator=replicator)

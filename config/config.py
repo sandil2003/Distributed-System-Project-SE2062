@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from a .env file (optional)
-load_dotenv()
+NODE_ENV = os.getenv("NODE_ENV", ".env")
+load_dotenv(dotenv_path=NODE_ENV) 
 
 # -------------------------------
 # Node configuration

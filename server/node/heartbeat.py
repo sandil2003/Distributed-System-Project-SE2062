@@ -2,7 +2,7 @@
 import socket
 import threading
 import time
-import config
+from config import config
 from common import utils
 
 class HeartbeatMonitor(threading.Thread):
@@ -18,6 +18,7 @@ class HeartbeatMonitor(threading.Thread):
         self.running = True
         self.status = {pid: False for pid in self.peers.keys()}
         self.lock = threading.Lock()
+        self._last_heartbeat = time.time()
 
     def check_peer(self, hostport):
         host, port = hostport.split(":")

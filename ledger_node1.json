@@ -6,5 +6,69 @@
     "timestamp": "2025-09-22T06:02:55.811046Z",
     "status": "COMMITTED",
     "origin_node": "node1"
+  },
+  {
+    "tx_id": "cccb533a-bfed-4b16-9351-f7e4fa10650a",
+    "user_id": "node1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:20:09.796231Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "78af0779-41eb-4695-9368-042b2f4f1772",
+    "user_id": "node1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:20:53.463446Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "ab741deb-188e-46fd-9da1-15714209e412",
+    "user_id": "node2",
+    "amount": 20.0,
+    "timestamp": "2025-09-22T06:23:15.266087Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "514b7347-08c5-4500-ad6a-05173373b023",
+    "user_id": "node2",
+    "amount": 20.0,
+    "timestamp": "2025-09-22T06:24:38.285511Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "0aa93c92-b969-4960-a5c8-ee4f4b6b4604",
+    "user_id": "user1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:25:53.548608Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "3a3dbf3e-6a0f-44a1-84e9-eea4761d919d",
+    "user_id": "userq",
+    "amount": 30.0,
+    "timestamp": "2025-09-22T12:47:39.158300Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "657e157e-7bb1-4c60-abf7-16f80e4fe8dd",
+    "user_id": "user1",
+    "amount": 80.0,
+    "timestamp": "2025-09-22T14:17:44.145303Z",
+    "status": "PENDING",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "28876062-2437-4aa7-9a20-dda24308c68f",
+    "user_id": "user123",
+    "amount": 77.0,
+    "timestamp": "2025-09-22T14:18:43.914432Z",
+    "status": "PENDING",
+    "origin_node": "node1"
   }
 ]
