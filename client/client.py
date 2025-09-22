@@ -1,8 +1,8 @@
 import grpc
 import sys
 from common import utils
-import payment_pb2
-import payment_pb2_grpc
+from proto import payment_pb2
+from proto import payment_pb2_grpc
 
 
 def run():
