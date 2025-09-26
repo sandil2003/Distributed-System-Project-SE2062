@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "tx_id": "0fae559a-0a65-4ac9-a1e7-fbd43d1e10ea",
+    "user_id": "user123",
+    "amount": 60.0,
+    "timestamp": "2025-09-26T00:49:07.402144Z",
+    "status": "COMMITTED",
+    "origin_node": "node2",
+    "vector_time": {
+      "node2": 312,
+      "node1": 219,
+      "node3": 126
+    }
+  },
+  {
+    "tx_id": "a4fbc24b-0f27-49cc-ade9-7a1a8fff4012",
+    "user_id": "user456",
+    "amount": 100.0,
+    "timestamp": "2025-09-26T00:49:55.464745Z",
+    "status": "COMMITTED",
+    "origin_node": "node2",
+    "vector_time": {
+      "node2": 457,
+      "node1": 268,
+      "node3": 175
+    }
+  }
+]

@@ -2,12 +2,16 @@
 import threading
 import time
 import random
+import json
+import os
 from common import utils
 from config import config
+from server.time_sync.vector_clock import VectorClock
 
 from proto import consensus_pb2
 from proto import consensus_pb2_grpc
 import grpc
+import time as pytime
 
 class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
     """
@@ -30,6 +34,13 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
         self.election_timeout = config.ELECTION_TIMEOUT
         self.heartbeat_interval = config.HEARTBEAT_INTERVAL
         self.running = True
+        
+  
+        
+        # Initialize vector clock with all nodes
+        all_nodes = [self.node_id] + list(self.peers.keys())
+        self.vector_clock = VectorClock(self.node_id, all_nodes)
+        utils.log_event(f"[RAFT:{self.node_id}] Initialized vector clock with nodes: {all_nodes}")
 
         # background election thread
         self.election_thread = threading.Thread(target=self._run_election_timer, daemon=True)
@@ -40,6 +51,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
 
         # map index->event (simple waiters)
         self.commit_waiters = {}  # index -> threading.Event
+        self.last_heartbeat_time = pytime.time()
 
     # --- RPC implementations ---
     def RequestVote(self, request, context):
@@ -61,15 +73,45 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
             # treat as heartbeat if entries empty
             self.current_term = max(self.current_term, request.term)
             self.leader_id = request.leader_id
+            self.last_heartbeat_time = pytime.time()
+            
+            # Update vector clock on receiving entries
+            if hasattr(request, 'vector_clock') and request.vector_clock:
+                leader_clock = {k: v for k, v in request.vector_clock.clock.items()}
+                self.vector_clock.update(leader_clock)
+                utils.log_event(f"[RAFT:{self.node_id}] Updated vector clock: {self.vector_clock}")
+            
             if len(request.entries) > 0:
                 for e in request.entries:
-                    # convert LogEntry proto -> dict
-                    entry = {"user_id": e.user_id, "amount": e.amount, "status": e.status, "timestamp": e.timestamp}
+                    # Convert entry vector clock to dict
+                    entry_vclock = {k: v for k, v in e.vector_time.clock.items()} if e.vector_time else self.vector_clock.get_clock()
+                    
+                    # convert LogEntry proto -> dict and include vector timestamp
+                    entry = {
+                        "user_id": e.user_id,
+                        "amount": e.amount,
+                        "status": e.status,
+                        "timestamp": e.timestamp,
+                        "vector_time": entry_vclock
+                    }
                     self.log.append(entry)
                     utils.log_event(f"[RAFT:{self.node_id}] Appended entry from leader {request.leader_id}")
                 # mark latest as committed by leader_commit index
                 self.commit_index = max(self.commit_index, request.leader_commit)
-            return consensus_pb2.AppendEntriesResponse(term=self.current_term, success=True)
+                
+                # Tick vector clock after processing entries
+                self.vector_clock.tick()
+            
+            # Create response vector clock
+            response_vclock = consensus_pb2.VectorClockMap()
+            for node, time in self.vector_clock.get_clock().items():
+                response_vclock.clock[node] = time
+                
+            return consensus_pb2.AppendEntriesResponse(
+                term=self.current_term,
+                success=True,
+                vector_clock=response_vclock
+            )
 
     # --- client api for local node to propose entries ---
     def propose(self, entry):
@@ -80,9 +122,13 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
         Returns the log index of the appended entry.
         """
         with self.lock:
+            # Update vector clock for new entry
+            self.vector_clock.tick()
+            entry["vector_time"] = self.vector_clock.get_clock()
+            
             entry_index = len(self.log)
             self.log.append(entry)
-            utils.log_event(f"[RAFT:{self.node_id}] Proposed entry at index {entry_index}")
+            utils.log_event(f"[RAFT:{self.node_id}] Proposed entry at index {entry_index} with vector time {entry['vector_time']}")
             # create a waiter that will be set when commit_index >= entry_index
             evt = threading.Event()
             self.commit_waiters[entry_index] = evt
@@ -135,6 +181,9 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
         """
         Send AppendEntries RPC to all peers (best-effort).
         """
+        # Increment vector clock before broadcast
+        self.vector_clock.tick()
+        
         for pid, addr in self.peers.items():
             try:
                 with grpc.insecure_channel(addr) as channel:
@@ -142,14 +191,41 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
                     # construct LogEntry protos
                     le_proto_list = []
                     for e in entries:
-                        le = consensus_pb2.LogEntry(user_id=e["user_id"], amount=e["amount"], status=e.get("status",""), timestamp=e.get("timestamp",""))
+                        # Create vector clock map for the entry
+                        entry_vclock = consensus_pb2.VectorClockMap()
+                        for node, time in e.get("vector_time", self.vector_clock.get_clock()).items():
+                            entry_vclock.clock[node] = time
+                            
+                        le = consensus_pb2.LogEntry(
+                            user_id=e["user_id"],
+                            amount=e["amount"],
+                            status=e.get("status",""),
+                            timestamp=e.get("timestamp",""),
+                            vector_time=entry_vclock
+                        )
                         le_proto_list.append(le)
-                    req = consensus_pb2.AppendEntriesRequest(term=self.current_term, leader_id=self.node_id,
-                                                             prev_log_index=len(self.log)-len(entries)-1,
-                                                             prev_log_term=self.current_term,
-                                                             entries=le_proto_list,
-                                                             leader_commit=self.commit_index)
-                    stub.AppendEntries(req, timeout=config.RPC_TIMEOUT)
+                        
+                    # Create vector clock map for the request
+                    vclock = consensus_pb2.VectorClockMap()
+                    for node, time in self.vector_clock.get_clock().items():
+                        vclock.clock[node] = time
+                        
+                    req = consensus_pb2.AppendEntriesRequest(
+                        term=self.current_term,
+                        leader_id=self.node_id,
+                        prev_log_index=len(self.log)-len(entries)-1,
+                        prev_log_term=self.current_term,
+                        entries=le_proto_list,
+                        leader_commit=self.commit_index,
+                        vector_clock=vclock
+                    )
+                    response = stub.AppendEntries(req, timeout=config.RPC_TIMEOUT)
+                    
+                    # Update vector clock with follower's response
+                    if hasattr(response, 'vector_clock') and response.vector_clock:
+                        follower_clock = {k: v for k, v in response.vector_clock.clock.items()}
+                        self.vector_clock.update(follower_clock)
+                        utils.log_event(f"[RAFT:{self.node_id}] Updated vector clock from {pid}: {self.vector_clock}")
             except Exception as ex:
                 utils.log_event(f"[RAFT:{self.node_id}] Error broadcasting to {pid}: {ex}")
 
@@ -164,8 +240,11 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
             # check if leader known/recent
             with self.lock:
                 leader = self.leader_id
-            if leader is None:
+                time_since_heartbeat = pytime.time() - self.last_heartbeat_time
+            if leader is None or time_since_heartbeat > self.election_timeout:
                 # start election
+                with self.lock:
+                    self.leader_id = None
                 self._start_election()
 
     def _start_election(self):
@@ -209,6 +288,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
                 except Exception as e:
                     utils.log_event(f"[RAFT:{self.node_id}] Heartbeat error: {e}")
             time.sleep(self.heartbeat_interval)
+
 
     def stop(self):
         self.running = False

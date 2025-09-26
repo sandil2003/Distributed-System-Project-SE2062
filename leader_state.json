@@ -1,0 +1,7 @@
+{
+    "current_leader": null,
+    "term": 0,
+    "last_updated": null,
+    "cluster_nodes": [],
+    "election_history": []
+}

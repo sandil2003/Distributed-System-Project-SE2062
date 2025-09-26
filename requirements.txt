@@ -21,3 +21,4 @@ loguru==0.7.2               # Better logging
 # --- Testing ---
 pytest==8.3.3               # Unit testing
 pytest-asyncio==0.25.0      # Async testing support
+pytime

@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from proto import consensus_pb2 as proto_dot_consensus__pb2
+from proto import consensus_pb2 as consensus__pb2
 
 GRPC_GENERATED_VERSION = '1.68.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in proto/consensus_pb2_grpc.py depends on'
+        + f' but the generated code in consensus_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -37,13 +37,13 @@ class ConsensusServiceStub(object):
         """
         self.RequestVote = channel.unary_unary(
                 '/consensus.ConsensusService/RequestVote',
-                request_serializer=proto_dot_consensus__pb2.VoteRequest.SerializeToString,
-                response_deserializer=proto_dot_consensus__pb2.VoteResponse.FromString,
+                request_serializer=consensus__pb2.VoteRequest.SerializeToString,
+                response_deserializer=consensus__pb2.VoteResponse.FromString,
                 _registered_method=True)
         self.AppendEntries = channel.unary_unary(
                 '/consensus.ConsensusService/AppendEntries',
-                request_serializer=proto_dot_consensus__pb2.AppendEntriesRequest.SerializeToString,
-                response_deserializer=proto_dot_consensus__pb2.AppendEntriesResponse.FromString,
+                request_serializer=consensus__pb2.AppendEntriesRequest.SerializeToString,
+                response_deserializer=consensus__pb2.AppendEntriesResponse.FromString,
                 _registered_method=True)
 
 
@@ -68,13 +68,13 @@ def add_ConsensusServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'RequestVote': grpc.unary_unary_rpc_method_handler(
                     servicer.RequestVote,
-                    request_deserializer=proto_dot_consensus__pb2.VoteRequest.FromString,
-                    response_serializer=proto_dot_consensus__pb2.VoteResponse.SerializeToString,
+                    request_deserializer=consensus__pb2.VoteRequest.FromString,
+                    response_serializer=consensus__pb2.VoteResponse.SerializeToString,
             ),
             'AppendEntries': grpc.unary_unary_rpc_method_handler(
                     servicer.AppendEntries,
-                    request_deserializer=proto_dot_consensus__pb2.AppendEntriesRequest.FromString,
-                    response_serializer=proto_dot_consensus__pb2.AppendEntriesResponse.SerializeToString,
+                    request_deserializer=consensus__pb2.AppendEntriesRequest.FromString,
+                    response_serializer=consensus__pb2.AppendEntriesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -103,8 +103,8 @@ class ConsensusService(object):
             request,
             target,
             '/consensus.ConsensusService/RequestVote',
-            proto_dot_consensus__pb2.VoteRequest.SerializeToString,
-            proto_dot_consensus__pb2.VoteResponse.FromString,
+            consensus__pb2.VoteRequest.SerializeToString,
+            consensus__pb2.VoteResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -130,8 +130,8 @@ class ConsensusService(object):
             request,
             target,
             '/consensus.ConsensusService/AppendEntries',
-            proto_dot_consensus__pb2.AppendEntriesRequest.SerializeToString,
-            proto_dot_consensus__pb2.AppendEntriesResponse.FromString,
+            consensus__pb2.AppendEntriesRequest.SerializeToString,
+            consensus__pb2.AppendEntriesResponse.FromString,
             options,
             channel_credentials,
             insecure,
