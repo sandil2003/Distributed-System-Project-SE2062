@@ -33,12 +33,20 @@ if PEERS_RAW:
 RPC_TIMEOUT = int(os.getenv("RPC_TIMEOUT", 3))  # gRPC request timeout (seconds)
 HEARTBEAT_INTERVAL = float(os.getenv("HEARTBEAT_INTERVAL", 1.0))  # Leader heartbeat
 ELECTION_TIMEOUT = int(os.getenv("ELECTION_TIMEOUT", 5))  # Election timeout (seconds)
+HEARTBEAT_FAILURE_THRESHOLD = int(os.getenv("HEARTBEAT_FAILURE_THRESHOLD", 3))
+HEARTBEAT_SLOW_THRESHOLD_MS = float(os.getenv("HEARTBEAT_SLOW_THRESHOLD_MS", 500.0))
+HEARTBEAT_LATENCY_ALPHA = float(os.getenv("HEARTBEAT_LATENCY_ALPHA", 0.2))
 
 # -------------------------------
 # Ledger / Replication config
 # -------------------------------
 LEDGER_FILE = os.getenv("LEDGER_FILE", f"ledger_{NODE_ID}.json")  # local ledger file
 CONSISTENCY_MODEL = os.getenv("CONSISTENCY_MODEL", "strong")      # "strong" or "eventual"
+
+# -------------------------------
+# Consensus persistence config
+# -------------------------------
+RAFT_STATE_FILE = os.getenv("RAFT_STATE_FILE", f"raft_state_{NODE_ID}.json")
 
 # -------------------------------
 # Logging config

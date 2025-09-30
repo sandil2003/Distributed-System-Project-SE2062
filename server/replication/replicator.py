@@ -7,6 +7,7 @@ from config import config
 from proto import replication_pb2
 from proto import replication_pb2_grpc
 from proto import payment_pb2
+from proto import payment_pb2_grpc
 
 class Replicator:
     """
@@ -44,3 +45,21 @@ class Replicator:
 
         if errors:
             utils.log_event(f"[REPLICATOR] push_transaction had errors: {errors}")
+
+    def recover_from_peers(self, merge_callback):
+        """
+        Pull full ledger history from peers and merge using provided callback.
+        merge_callback(peer_id, transactions) should return number of applied entries.
+        """
+        recovered = 0
+        for pid, addr in self.peers.items():
+            if pid == config.NODE_ID:
+                continue
+            try:
+                with grpc.insecure_channel(addr) as channel:
+                    stub = payment_pb2_grpc.PaymentServiceStub(channel)
+                    response = stub.GetHistory(payment_pb2.HistoryRequest(user_id=""), timeout=config.RPC_TIMEOUT)
+                    recovered += merge_callback(pid, response.transactions)
+            except Exception as e:
+                utils.log_event(f"[REPLICATOR] Failed to pull ledger from {pid}: {e}")
+        return recovered

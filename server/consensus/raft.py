@@ -34,6 +34,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
         self.election_timeout = config.ELECTION_TIMEOUT
         self.heartbeat_interval = config.HEARTBEAT_INTERVAL
         self.running = True
+        self.state_file = config.RAFT_STATE_FILE
         
   
         
@@ -41,6 +42,9 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
         all_nodes = [self.node_id] + list(self.peers.keys())
         self.vector_clock = VectorClock(self.node_id, all_nodes)
         utils.log_event(f"[RAFT:{self.node_id}] Initialized vector clock with nodes: {all_nodes}")
+
+        # Load any persisted state before threads start
+        self._load_state()
 
         # background election thread
         self.election_thread = threading.Thread(target=self._run_election_timer, daemon=True)
@@ -65,6 +69,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
                     self.voted_for = request.candidate_id
                     self.current_term = request.term
                     rv = True
+                self._persist_state_locked()
             utils.log_event(f"[RAFT:{self.node_id}] RequestVote from {request.candidate_id} term={request.term} granted={rv}")
             return consensus_pb2.VoteResponse(vote_granted=rv, term=self.current_term)
 
@@ -101,6 +106,8 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
                 
                 # Tick vector clock after processing entries
                 self.vector_clock.tick()
+
+            self._persist_state_locked()
             
             # Create response vector clock
             response_vclock = consensus_pb2.VectorClockMap()
@@ -132,6 +139,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
             # create a waiter that will be set when commit_index >= entry_index
             evt = threading.Event()
             self.commit_waiters[entry_index] = evt
+            self._persist_state_locked()
 
         # If leader, send AppendEntries immediately
         if self.get_leader() == self.node_id:
@@ -176,6 +184,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
                 for i in to_remove:
                     del self.commit_waiters[i]
                 utils.log_event(f"[RAFT:{self.node_id}] Commit index advanced to {self.commit_index}")
+            self._persist_state_locked()
 
     def _broadcast_append(self, entries):
         """
@@ -253,6 +262,7 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
             self.voted_for = self.node_id
             self_votes = 1
             target_term = self.current_term
+            self._persist_state_locked()
         utils.log_event(f"[RAFT:{self.node_id}] Starting election term={target_term}")
         # ask peers for vote
         for pid, addr in self.peers.items():
@@ -292,3 +302,41 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
 
     def stop(self):
         self.running = False
+        with self.lock:
+            self._persist_state_locked()
+
+    # --- persistence helpers ---
+    def _load_state(self):
+        try:
+            if not os.path.exists(self.state_file):
+                return
+            with open(self.state_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            with self.lock:
+                self.current_term = data.get("current_term", self.current_term)
+                self.voted_for = data.get("voted_for", self.voted_for)
+                self.log = data.get("log", self.log)
+                self.commit_index = data.get("commit_index", self.commit_index)
+                persisted_clock = data.get("vector_clock")
+                if persisted_clock:
+                    self.vector_clock.set_clock(persisted_clock)
+            utils.log_event(f"[RAFT:{self.node_id}] Loaded persisted state entries={len(self.log)} term={self.current_term}")
+        except Exception as ex:
+            utils.log_event(f"[RAFT:{self.node_id}] Failed to load state: {ex}")
+
+    def _persist_state_locked(self):
+        """Persist Raft metadata to disk. Caller must hold self.lock."""
+        try:
+            data = {
+                "current_term": self.current_term,
+                "voted_for": self.voted_for,
+                "log": self.log,
+                "commit_index": self.commit_index,
+                "vector_clock": self.vector_clock.get_clock(),
+            }
+            tmp_file = f"{self.state_file}.tmp"
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            os.replace(tmp_file, self.state_file)
+        except Exception as ex:
+            utils.log_event(f"[RAFT:{self.node_id}] Failed to persist state: {ex}")

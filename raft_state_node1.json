@@ -1,0 +1,25 @@
+{
+  "current_term": 29,
+  "voted_for": "node1",
+  "log": [
+    {
+      "tx_id": "ed1c746d-9e0d-47d7-bed8-b487d835f12f",
+      "user_id": "user1",
+      "amount": 42.0,
+      "timestamp": "2025-09-30T17:28:08.343869Z",
+      "status": "PENDING",
+      "origin_node": "node1",
+      "vector_time": {
+        "node1": 54,
+        "node2": 0,
+        "node3": 0
+      }
+    }
+  ],
+  "commit_index": -1,
+  "vector_clock": {
+    "node1": 159,
+    "node2": 0,
+    "node3": 0
+  }
+}

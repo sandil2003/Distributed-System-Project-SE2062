@@ -23,5 +23,18 @@ class VectorClock:
     def get_clock(self):
         return self.clock.copy()
 
+    def set_clock(self, new_clock):
+        """Replace clock with persisted state, expanding node set if needed."""
+        for node in new_clock.keys():
+            if node not in self.clock:
+                self.clock[node] = 0
+                if node not in self.nodes:
+                    self.nodes.append(node)
+        for node, ts in new_clock.items():
+            self.clock[node] = ts
+        if self.node_id not in self.clock:
+            self.clock[self.node_id] = 0
+        return self.clock.copy()
+
     def __str__(self):
         return f"VectorClock(node={self.node_id}, clock={self.clock})"

@@ -20,7 +20,7 @@ class FailoverManager:
     def choose_node_for_client(self):
         """
         Choose a node for a client to use.
-        Prefer the current leader if alive, otherwise fall back to any live peer or self.
+        Prefer the current leader if alive, otherwise fall back to the lowest-latency live peer or self.
         Returns a tuple (node_id, address_str) or None.
         """
         leader = None
@@ -39,7 +39,11 @@ class FailoverManager:
             return leader, peers[leader]
 
         # else choose any live peer (prefer others)
-        for pid in live:
+        ranked_live = sorted(
+            list(live),
+            key=lambda pid: self.hb.get_latency_ms(pid) if self.hb.get_latency_ms(pid) is not None else float("inf")
+        )
+        for pid in ranked_live:
             if pid in peers:
                 return pid, peers[pid]
 

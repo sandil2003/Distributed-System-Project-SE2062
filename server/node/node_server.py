@@ -38,19 +38,74 @@ class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
         if not os.path.exists(LEDGER_FILE):
             with open(LEDGER_FILE, "w") as f:
                 json.dump([], f)
+        # attempt background recovery from peers
+        if config.PEER_NODES:
+            threading.Thread(target=self._recover_from_peers, daemon=True).start()
 
     def _append_local_ledger(self, entry):
         with self.ledger_lock:
-            with open(LEDGER_FILE, "r+") as f:
-                try:
-                    ledger = json.load(f)
-                except Exception:
-                    ledger = []
-                ledger.append(entry)
-                f.seek(0)
-                json.dump(ledger, f, indent=2)
-                f.truncate()
+            ledger = self._read_ledger_locked()
+            ledger.append(entry)
+            self._write_ledger_locked(ledger)
         utils.log_event(f"[LEDGER] Appended entry {entry['tx_id']} locally")
+
+    def _read_ledger_locked(self):
+        try:
+            with open(LEDGER_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            return []
+
+    def _write_ledger_locked(self, ledger):
+        with open(LEDGER_FILE, "w") as f:
+            json.dump(ledger, f, indent=2)
+
+    def _recover_from_peers(self):
+        """Fetch missing ledger entries from peers when the node (re)starts."""
+        # small delay to allow services to come online
+        time.sleep(1.5)
+        total_added = 0
+        for peer_id, addr in config.PEER_NODES.items():
+            try:
+                with grpc.insecure_channel(addr) as channel:
+                    stub = payment_pb2_grpc.PaymentServiceStub(channel)
+                    response = stub.GetHistory(payment_pb2.HistoryRequest(user_id=""), timeout=config.RPC_TIMEOUT)
+                    added = self._merge_remote_transactions(peer_id, response.transactions)
+                    total_added += added
+            except Exception as exc:
+                utils.log_event(f"[RECOVERY] Failed to pull ledger from {peer_id}: {exc}")
+        if total_added:
+            utils.log_event(f"[RECOVERY] Synchronized {total_added} ledger entries from peers")
+
+    def _merge_remote_transactions(self, source_node, transactions):
+        added = 0
+        with self.ledger_lock:
+            ledger = self._read_ledger_locked()
+            existing_keys = {
+                (entry.get("timestamp"), entry.get("user_id"), entry.get("amount"))
+                for entry in ledger
+            }
+            for tx in transactions:
+                key = (tx.timestamp, tx.user_id, tx.amount)
+                if key in existing_keys:
+                    continue
+                entry = {
+                    "tx_id": f"recovered-{source_node}-{uuid.uuid4()}",
+                    "user_id": tx.user_id,
+                    "amount": tx.amount,
+                    "timestamp": tx.timestamp,
+                    "status": tx.status or "COMMITTED",
+                    "origin_node": source_node,
+                    "recovered": True
+                }
+                ledger.append(entry)
+                existing_keys.add(key)
+                added += 1
+            if added:
+                self._write_ledger_locked(ledger)
+        if added:
+            utils.log_event(f"[RECOVERY] Applied {added} missing entries from {source_node}")
+        return added
 
     def ProcessPayment(self, request, context):
         """
