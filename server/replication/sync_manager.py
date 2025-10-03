@@ -28,6 +28,7 @@ class ReplicationService(replication_pb2_grpc.ReplicationServiceServicer):
     def _append_if_not_exists(self, tx):
         """
         Append transaction to local ledger if not already present.
+        deduplication is based on (timestamp, user_id, amount).
         """
         with self.ledger_lock:
             with open(LEDGER_FILE, "r+") as f:
