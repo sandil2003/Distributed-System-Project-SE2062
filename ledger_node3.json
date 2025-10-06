@@ -91,5 +91,13 @@
     "status": "COMMITTED",
     "timestamp": "2025-10-02T08:25:58.796178Z",
     "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-06T08:11:47.033554Z-sam",
+    "user_id": "sam",
+    "amount": 1000.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-06T08:11:47.033554Z",
+    "source": "replication"
   }
 ]

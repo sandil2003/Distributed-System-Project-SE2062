@@ -201,5 +201,18 @@
       "node2": 2452,
       "node3": 2452
     }
+  },
+  {
+    "tx_id": "22d263ae-b264-4d88-989e-589591844696",
+    "user_id": "sam",
+    "amount": 1000.0,
+    "timestamp": "2025-10-06T08:11:47.033554Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 1558,
+      "node2": 519,
+      "node3": 519
+    }
   }
 ]

@@ -3,6 +3,63 @@ import sys
 from common import utils
 from proto import payment_pb2
 from proto import payment_pb2_grpc
+import uuid
+from proto import consensus_pb2, consensus_pb2_grpc
+from datetime import datetime
+
+class PaymentResponse:
+    """
+    Simple response object to mimic your test usage
+    """
+    def __init__(self, status="SUCCESS", tx_id=None):
+        self.status = status
+        self.tx_id = tx_id or str(uuid.uuid4())
+class PaymentClient:
+    """
+    Client to send payment requests to a Raft node
+    """
+    def __init__(self, client_id, node_address):
+        self.client_id = client_id
+        self.node_address = node_address  # example: "localhost:50051"
+    
+    def process_payment(self, amount):
+        """
+        Send a payment request to the node.
+        Returns PaymentResponse.
+        """
+        try:
+            with grpc.insecure_channel(self.node_address) as channel:
+                stub = consensus_pb2_grpc.ConsensusServiceStub(channel)
+
+                # Prepare a log entry
+                timestamp = datetime.now().isoformat()
+                tx_id = f"{self.client_id}-{uuid.uuid4()}"
+                
+                entry = consensus_pb2.LogEntry(
+                    user_id=self.client_id,
+                    amount=amount,
+                    status="PENDING",
+                    timestamp=timestamp
+                )
+
+                # Wrap in AppendEntriesRequest (simulate leader handling)
+                request = consensus_pb2.AppendEntriesRequest(
+                    term=0,  # term will be ignored by follower
+                    leader_id=self.client_id,  # your leader logic will update
+                    prev_log_index=-1,
+                    prev_log_term=0,
+                    entries=[entry],
+                    leader_commit=-1
+                )
+
+                response = stub.AppendEntries(request, timeout=5)
+
+                # Return response object
+                status = "SUCCESS" if response.success else "FAILED"
+                return PaymentResponse(status=status, tx_id=tx_id)
+
+        except grpc.RpcError as e:
+            return PaymentResponse(status="FAILED")
 
 
 def run():

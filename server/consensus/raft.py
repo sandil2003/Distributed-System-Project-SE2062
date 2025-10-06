@@ -115,34 +115,81 @@ class RaftNode(consensus_pb2_grpc.ConsensusServiceServicer):
 
     # --- client api for local node to propose entries ---
     def propose(self, entry):
-        """
-        Called by PaymentService to propose an entry to the cluster.
-        If this node is leader, append to local log and send AppendEntries to followers.
-        If not leader, attempt to forward to leader (handled by node code).
-        Returns the log index of the appended entry.
-        """
-        with self.lock:
-            # Update vector clock for new entry
-            self.vector_clock.tick()
-            entry["vector_time"] = self.vector_clock.get_clock()
+    
+        leader = self.get_leader()
+        
+        if leader == self.node_id or leader is None:
+            # This node is leader (or no leader yet) → append locally
+            with self.lock:
+                self.vector_clock.tick()
+                entry["vector_time"] = self.vector_clock.get_clock()
+                
+                entry_index = len(self.log)
+                self.log.append(entry)
+                utils.log_event(f"[RAFT:{self.node_id}] Proposed entry at index {entry_index} with vector time {entry['vector_time']}")
+                
+                # create a waiter that will be set when commit_index >= entry_index
+                evt = threading.Event()
+                self.commit_waiters[entry_index] = evt
+
+            # If leader, send AppendEntries immediately
+            if leader == self.node_id:
+                self._broadcast_append([entry])
+                # simulate commit when majority ack (simplified)
+                self._mark_committed(entry_index)
             
-            entry_index = len(self.log)
-            self.log.append(entry)
-            utils.log_event(f"[RAFT:{self.node_id}] Proposed entry at index {entry_index} with vector time {entry['vector_time']}")
-            # create a waiter that will be set when commit_index >= entry_index
-            evt = threading.Event()
-            self.commit_waiters[entry_index] = evt
+            return entry_index
 
-        # If leader, send AppendEntries immediately
-        if self.get_leader() == self.node_id:
-            self._broadcast_append([entry])
-            # simulate commit when majority ack (we simplify as immediate)
-            self._mark_committed(entry_index)
         else:
-            # not leader; return index but commit will be handled when forwarded/proposed by leader
-            pass
+            # Forward the entry to the leader via gRPC
+            leader_addr = self.peers.get(leader)
+            if leader_addr is None:
+                utils.log_event(f"[RAFT:{self.node_id}] Leader {leader} not found in peers")
+                return None
+            
+            try:
+                with grpc.insecure_channel(leader_addr) as channel:
+                    stub = consensus_pb2_grpc.ConsensusServiceStub(channel)
+                    
+                    # Create LogEntry proto
+                    entry_vclock = consensus_pb2.VectorClockMap()
+                    for node, time in self.vector_clock.get_clock().items():
+                        entry_vclock.clock[node] = time
+                    
+                    le = consensus_pb2.LogEntry(
+                        user_id=entry["user_id"],
+                        amount=entry["amount"],
+                        status=entry.get("status", ""),
+                        timestamp=entry.get("timestamp", ""),
+                        vector_time=entry_vclock
+                    )
+                    
+                    # Send AppendEntries request with this single entry
+                    req = consensus_pb2.AppendEntriesRequest(
+                        term=self.current_term,
+                        leader_id=leader,
+                        prev_log_index=len(self.log)-1,
+                        prev_log_term=self.current_term,
+                        entries=[le],
+                        leader_commit=self.commit_index,
+                        vector_clock=entry_vclock
+                    )
+                    
+                    response = stub.AppendEntries(req, timeout=config.RPC_TIMEOUT)
+                    if response.success:
+                        # update vector clock from leader response
+                        if hasattr(response, "vector_clock") and response.vector_clock:
+                            follower_clock = {k: v for k, v in response.vector_clock.clock.items()}
+                            self.vector_clock.update(follower_clock)
+                            utils.log_event(f"[RAFT:{self.node_id}] Updated vector clock from leader {leader}: {self.vector_clock}")
+                        return len(self.log)  # index assigned by leader
+                    else:
+                        utils.log_event(f"[RAFT:{self.node_id}] Leader rejected proposal")
+                        return None
+            except Exception as ex:
+                utils.log_event(f"[RAFT:{self.node_id}] Error forwarding proposal to leader {leader}: {ex}")
+                return None
 
-        return entry_index
 
     def wait_for_commit(self, index, timeout=5):
         """
