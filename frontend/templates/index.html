@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Processing - Distributed Payment System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Process Payment
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="payment-form">
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">
+                            <i class="fas fa-user me-1"></i>
+                            User ID
+                        </label>
+                        <input type="text" class="form-control" id="user_id" name="user_id" required
+                               placeholder="Enter user ID (e.g., user123)">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">
+                            <i class="fas fa-dollar-sign me-1"></i>
+                            Amount
+                        </label>
+                        <input type="number" class="form-control" id="amount" name="amount" 
+                               step="0.01" min="0.01" required
+                               placeholder="Enter amount (e.g., 25.99)">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Process Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="result-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/history" class="btn btn-primary">View History</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Transactions
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Enter a User ID and click "Load History" to see recent transactions, or 
+                    <a href="/history" class="text-decoration-none">go to the full history page</a>.
+                </p>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" id="history-user-id" 
+                               placeholder="Enter User ID to view history">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-outline-primary w-100" id="load-history">
+                            <i class="fas fa-search me-1"></i>
+                            Load History
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="recent-transactions" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('payment-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    submitBtn.disabled = true;
+    
+    try {
+        const formData = new FormData(this);
+        const response = await fetch('/process-payment', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        // Show result in modal
+        let resultHtml = '';
+        if (response.ok) {
+            resultHtml = `
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-check-circle me-2"></i>Payment Successful!</h6>
+                    <p><strong>Status:</strong> ${result.status}</p>
+                    <p><strong>Message:</strong> ${result.message}</p>
+                    <p><strong>Timestamp:</strong> ${result.timestamp}</p>
+                    <p class="mb-0"><strong>Processed by:</strong> ${result.server}</p>
+                </div>
+            `;
+            
+            // Reset form
+            document.getElementById('payment-form').reset();
+        } else {
+            resultHtml = `
+                <div class="alert alert-danger">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Payment Failed</h6>
+                    <p>${result.detail || result.message || 'Unknown error occurred'}</p>
+                </div>
+            `;
+        }
+        
+        document.getElementById('result-content').innerHTML = resultHtml;
+        new bootstrap.Modal(document.getElementById('resultModal')).show();
+        
+    } catch (error) {
+        document.getElementById('result-content').innerHTML = `
+            <div class="alert alert-danger">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Network Error</h6>
+                <p>Failed to process payment: ${error.message}</p>
+            </div>
+        `;
+        new bootstrap.Modal(document.getElementById('resultModal')).show();
+    } finally {
+        // Restore button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// Load history functionality
+document.getElementById('load-history').addEventListener('click', async function() {
+    const userId = document.getElementById('history-user-id').value.trim();
+    const transactionsDiv = document.getElementById('recent-transactions');
+    
+    if (!userId) {
+        transactionsDiv.innerHTML = '<div class="alert alert-warning">Please enter a User ID</div>';
+        return;
+    }
+    
+    transactionsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div></div>';
+    
+    try {
+        const response = await fetch(`/history/${encodeURIComponent(userId)}`);
+        const result = await response.json();
+        
+        if (response.ok && result.transactions) {
+            if (result.transactions.length === 0) {
+                transactionsDiv.innerHTML = '<div class="alert alert-info">No transactions found for this user</div>';
+            } else {
+                let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr>';
+                html += '<th>Amount</th><th>Status</th><th>Timestamp</th></tr></thead><tbody>';
+                
+                result.transactions.slice(0, 5).forEach(tx => {
+                    const statusClass = tx.status === 'SUCCESS' ? 'text-success' : 'text-danger';
+                    html += `<tr>
+                        <td>$${parseFloat(tx.amount).toFixed(2)}</td>
+                        <td><span class="${statusClass}">${tx.status}</span></td>
+                        <td>${tx.timestamp}</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                if (result.transactions.length > 5) {
+                    html += `<p class="text-muted">Showing 5 most recent transactions. <a href="/history?user_id=${userId}">View all</a></p>`;
+                }
+                
+                transactionsDiv.innerHTML = html;
+            }
+        } else {
+            transactionsDiv.innerHTML = `<div class="alert alert-danger">Failed to load history: ${result.detail || 'Unknown error'}</div>`;
+        }
+    } catch (error) {
+        transactionsDiv.innerHTML = `<div class="alert alert-danger">Network error: ${error.message}</div>`;
+    }
+});
+
+// Allow Enter key to load history
+document.getElementById('history-user-id').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('load-history').click();
+    }
+});
+</script>
+{% endblock %}

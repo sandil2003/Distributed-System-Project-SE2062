@@ -1,0 +1,103 @@
+[
+  {
+    "tx_id": "rep-2025-09-26T00:49:07.402144Z-user123",
+    "user_id": "user123",
+    "amount": 60.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T00:49:07.402144Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-09-26T00:49:55.464745Z-user456",
+    "user_id": "user456",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T00:49:55.464745Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-09-26T01:16:25.585246Z-user1234",
+    "user_id": "user1234",
+    "amount": 800.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T01:16:25.585246Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-09-26T04:01:45.436772Z-sam",
+    "user_id": "sam",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T04:01:45.436772Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-01T00:07:32.658260Z-123",
+    "user_id": "123",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-01T00:07:32.658260Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-01T00:07:38.259286Z-123",
+    "user_id": "123",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-01T00:07:38.259286Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-01T00:49:31.539882Z-123",
+    "user_id": "123",
+    "amount": 200.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-01T00:49:31.539882Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-01T00:49:40.214055Z-123",
+    "user_id": "123",
+    "amount": 200.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-01T00:49:40.214055Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "875f46da-716d-4768-8791-9cdccd73d955",
+    "user_id": "user123",
+    "amount": 500.0,
+    "timestamp": "2025-10-02T04:17:09.815699Z",
+    "status": "PENDING",
+    "origin_node": "node3",
+    "vector_time": {
+      "node3": 17904,
+      "node1": 53702,
+      "node2": 17904
+    }
+  },
+  {
+    "tx_id": "rep-2025-10-02T04:20:02.351395Z-sam",
+    "user_id": "sam",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-02T04:20:02.351395Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-02T08:25:58.796178Z-sam",
+    "user_id": "sam",
+    "amount": 500.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-02T08:25:58.796178Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-10-06T08:11:47.033554Z-sam",
+    "user_id": "sam",
+    "amount": 1000.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-06T08:11:47.033554Z",
+    "source": "replication"
+  }
+]
