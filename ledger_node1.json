@@ -1,0 +1,218 @@
+[
+  {
+    "tx_id": "c0cf4366-28e1-483a-ae9b-8496795c6b17",
+    "user_id": "node1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:02:55.811046Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "cccb533a-bfed-4b16-9351-f7e4fa10650a",
+    "user_id": "node1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:20:09.796231Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "78af0779-41eb-4695-9368-042b2f4f1772",
+    "user_id": "node1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:20:53.463446Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "ab741deb-188e-46fd-9da1-15714209e412",
+    "user_id": "node2",
+    "amount": 20.0,
+    "timestamp": "2025-09-22T06:23:15.266087Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "514b7347-08c5-4500-ad6a-05173373b023",
+    "user_id": "node2",
+    "amount": 20.0,
+    "timestamp": "2025-09-22T06:24:38.285511Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "0aa93c92-b969-4960-a5c8-ee4f4b6b4604",
+    "user_id": "user1",
+    "amount": 100.0,
+    "timestamp": "2025-09-22T06:25:53.548608Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "3a3dbf3e-6a0f-44a1-84e9-eea4761d919d",
+    "user_id": "userq",
+    "amount": 30.0,
+    "timestamp": "2025-09-22T12:47:39.158300Z",
+    "status": "COMMITTED",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "657e157e-7bb1-4c60-abf7-16f80e4fe8dd",
+    "user_id": "user1",
+    "amount": 80.0,
+    "timestamp": "2025-09-22T14:17:44.145303Z",
+    "status": "PENDING",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "28876062-2437-4aa7-9a20-dda24308c68f",
+    "user_id": "user123",
+    "amount": 77.0,
+    "timestamp": "2025-09-22T14:18:43.914432Z",
+    "status": "PENDING",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "fd693fd3-1e46-458c-a7d9-ef124d314a95",
+    "user_id": "userq",
+    "amount": 60.0,
+    "timestamp": "2025-09-23T05:45:50.525889Z",
+    "status": "PENDING",
+    "origin_node": "node1"
+  },
+  {
+    "tx_id": "rep-2025-09-26T00:49:07.402144Z-user123",
+    "user_id": "user123",
+    "amount": 60.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T00:49:07.402144Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-09-26T00:49:55.464745Z-user456",
+    "user_id": "user456",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T00:49:55.464745Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-09-26T01:16:25.585246Z-user1234",
+    "user_id": "user1234",
+    "amount": 800.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T01:16:25.585246Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "rep-2025-09-26T04:01:45.436772Z-sam",
+    "user_id": "sam",
+    "amount": 100.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-09-26T04:01:45.436772Z",
+    "source": "replication"
+  },
+  {
+    "tx_id": "a56fce16-8e6e-4cb9-b55d-f80e63d21492",
+    "user_id": "123",
+    "amount": 100.0,
+    "timestamp": "2025-10-01T00:07:32.658260Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 204,
+      "node2": 68,
+      "node3": 67
+    }
+  },
+  {
+    "tx_id": "a28398ca-a8ee-4184-b16a-b6a5f156f287",
+    "user_id": "123",
+    "amount": 100.0,
+    "timestamp": "2025-10-01T00:07:38.259286Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 226,
+      "node2": 76,
+      "node3": 75
+    }
+  },
+  {
+    "tx_id": "0c66b1c3-7eba-43eb-a465-10f58b046700",
+    "user_id": "123",
+    "amount": 200.0,
+    "timestamp": "2025-10-01T00:49:31.539882Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 7694,
+      "node2": 2566,
+      "node3": 2565
+    }
+  },
+  {
+    "tx_id": "50277cea-ed97-4d54-b06c-d2f757f64b2f",
+    "user_id": "123",
+    "amount": 200.0,
+    "timestamp": "2025-10-01T00:49:40.214055Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 7725,
+      "node2": 2577,
+      "node3": 2576
+    }
+  },
+  {
+    "tx_id": "7c3beb03-a5da-44e2-949f-4027fb6aca65",
+    "user_id": "user123",
+    "amount": 200.0,
+    "timestamp": "2025-10-02T04:16:30.361895Z",
+    "status": "PENDING",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 53704,
+      "node2": 17904,
+      "node3": 17903
+    }
+  },
+  {
+    "tx_id": "8fabfcf7-3c7f-4ed5-8653-3b8640631498",
+    "user_id": "sam",
+    "amount": 100.0,
+    "timestamp": "2025-10-02T04:20:02.351395Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 121,
+      "node2": 40,
+      "node3": 40
+    }
+  },
+  {
+    "tx_id": "3d05f8d0-8b0e-4d54-95b2-5deebc63a560",
+    "user_id": "sam",
+    "amount": 500.0,
+    "timestamp": "2025-10-02T08:25:58.796178Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 7355,
+      "node2": 2452,
+      "node3": 2452
+    }
+  },
+  {
+    "tx_id": "22d263ae-b264-4d88-989e-589591844696",
+    "user_id": "sam",
+    "amount": 1000.0,
+    "timestamp": "2025-10-06T08:11:47.033554Z",
+    "status": "COMMITTED",
+    "origin_node": "node1",
+    "vector_time": {
+      "node1": 1558,
+      "node2": 519,
+      "node3": 519
+    }
+  }
+]
