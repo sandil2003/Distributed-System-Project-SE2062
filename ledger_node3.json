@@ -99,5 +99,39 @@
     "status": "COMMITTED",
     "timestamp": "2025-10-06T08:11:47.033554Z",
     "source": "replication"
+  },
+  {
+    "tx_id": "502fb099-7431-40bf-8781-8200bd4620ae",
+    "user_id": "sam",
+    "amount": 200.0,
+    "timestamp": "2025-10-06T11:27:30.663792Z",
+    "status": "PENDING",
+    "origin_node": "node3",
+    "vector_time": {
+      "node3": 1317,
+      "node1": 3843,
+      "node2": 1282
+    }
+  },
+  {
+    "tx_id": "34ccf5ed-715b-477a-8bdc-c688538ad8b5",
+    "user_id": "sam",
+    "amount": 1200.0,
+    "timestamp": "2025-10-06T11:27:55.913014Z",
+    "status": "PENDING",
+    "origin_node": "node3",
+    "vector_time": {
+      "node3": 1318,
+      "node1": 3843,
+      "node2": 1282
+    }
+  },
+  {
+    "tx_id": "rep-2025-10-06T11:30:13.882136Z-sam",
+    "user_id": "sam",
+    "amount": 1200.0,
+    "status": "COMMITTED",
+    "timestamp": "2025-10-06T11:30:13.882136Z",
+    "source": "replication"
   }
 ]
